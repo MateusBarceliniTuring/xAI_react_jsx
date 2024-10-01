@@ -1,157 +1,131 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from 'react';
+import { 
+    Card, CardContent, CardHeader, CardTitle,
+    CardFooter, Button, Input, Label, Select, SelectItem
+} from "@/components/ui";
 
-const batchesData = ["react-batch-01"];
-
-let tasksData = [
-  {batch: "react-batch-01", task: "40888", taskName: 'Health Calculator', responses: ['']},
-]
-
-const Tasks = () => {
-  const [batches, setBatches] = useState([]);
-  const [selectedBatch, setSelectedBatch] = useState("");
-  const [tasks, setTasks] = useState([]);
-  const [currentComponent, setCurrentComponent] = useState(null);
-
-  // Fetch top-level batches
-  useEffect(() => {
-    const loadBatches = async () => {
-      try {
-        setBatches(batchesData);
-        if (batchesData.length > 0) {
-          // Set default folder to last one
-          setSelectedBatch(batchesData[batchesData.length - 1]);
-        }
-      } catch (error) {
-        console.error("Error fetching batches:", error);
-      }
-    };
-
-    loadBatches();
-  }, []);
-
-  // Load tasks when a batch is selected
-  useEffect(() => {
-    if (!selectedBatch) return;
-
-    const loadTasks = async () => {
-      try {
-        for (let i = 0; i < tasksData.length; i++) {
-          tasksData[i].responses = ["response_a", "response_b", "response_ideal"];
-        }
-        setTasks(tasksData);
-      } catch (error) {
-        console.error("Error loading tasks:", error);
-      }
-    };
-
-    loadTasks();
-  }, [selectedBatch]);
-
-  // Handle batch selection change
-  const handleBatchChange = (event) => {
-    setSelectedBatch(event.target.value);
-  };
-
-  // Render selected component
-  const handleComponentRender = async (task, response) => {
-    try {
-      setCurrentComponent(null);
-
-      let componentModule;
-      let file = `./tasks/${task.batch}/${task.task}/${response}/App.jsx`;
-
-      componentModule = await import(file);
-
-      if (componentModule) {
-        setCurrentComponent(React.createElement(componentModule.default));
-      }
-    } catch (error) {
-      console.error("Error loading component:", error);
-    }
-  };
-
-  //useEffect(() => {
-    // Load the component on the initial load
-    // handleComponentRender(window.location.pathname);
-
-    // Listen to browser back/forward navigation
-    //const onPopState = () => {
-    //  handleComponentRender(window.location.pathname);
-    //};
-    //window.addEventListener("popstate", onPopState);
-
-    // Cleanup event listener on unmount
-    //return () => {
-    //  window.removeEventListener("popstate", onPopState);
-    //};
-  //}, []);
-
-  return currentComponent ? (
-    currentComponent
-  ) : (
-    <div className="bg-gray-100 min-h-screen p-4">
-      <h1 className="text-4xl font-bold text-center text-gray-800 my-8">
-        Tasks by batch
-      </h1>
-
-      <div className="filter flex justify-center mb-8" style={{ alignItems: 'center' }}>
-        <label htmlFor="batchSelect" className="text-lg text-gray-600 mr-4">
-          Select the batch:
-        </label>
-        <select
-          id="batchSelect"
-          value={selectedBatch}
-          onChange={handleBatchChange}
-          className="p-3 bg-white border-2 border-blue-500 rounded-lg text-blue-500 hover:bg-blue-500 hover:text-white transition duration-300"
-        >
-          {batches.map((batch) => (
-            <option key={batch} value={batch}>
-              {batch}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div id="tasksContainer" className="max-w-5xl mx-auto px-4">
-        {tasks
-          .filter((task) => task.batch === selectedBatch)
-          .map((task) => (
-          <div
-            className="bg-white shadow-md rounded-lg p-6 mb-8 transform hover:-translate-y-2 hover:shadow-xl transition duration-300"
-            key={task.task}
-          >
-            <h2 className="text-2xl font-semibold text-center text-gray-800 mb-4">
-              {task.task} - {task.taskName}
-            </h2>
-            <div className="task-buttons flex justify-center flex-wrap mt-4">
-              {task.responses.map((response) => {
-                const buttonLabel = response.toUpperCase().replace("RESPONSE_", "");
-                return (
-                  <button
-                    key={response}
-                    onClick={() =>
-                      //
-                      {
-                        window.history.pushState(
-                          {},
-                          "",
-                          `${task.batch}/${task.task}/${response}`
-                        );
-                        handleComponentRender(task, response);
-                      }
-                    }
-                    className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow-md m-2 hover:bg-blue-700 transition duration-300"
-                  >
-                    {`Response ${buttonLabel}`}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+// Constants for BMR calculation
+const ACTIVITY_LEVELS = {
+    sedentary: 1.2,
+    lightlyActive: 1.375,
+    moderatelyActive: 1.55,
+    veryActive: 1.725,
+    extraActive: 1.9
 };
 
-export default Tasks;
+const App = () => {
+    const [formData, setFormData] = useState({
+        weight: '', height: '', age: '', gender: 'male', activity: 'sedentary'
+    });
+    const [results, setResults] = useState({ bmi: null, bmr: null });
+    const [errors, setErrors] = useState({});
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const validateForm = () => {
+        let tempErrors = {};
+        if (!formData.weight) tempErrors.weight = "Weight is required";
+        if (!formData.height) tempErrors.height = "Height is required";
+        if (!formData.age) tempErrors.age = "Age is required";
+        setErrors(tempErrors);
+        return Object.keys(tempErrors).length === 0;
+    };
+
+    const calculateBMI = () => {
+        const heightInMeters = formData.height / 100;
+        return (formData.weight / (heightInMeters * heightInMeters)).toFixed(2);
+    };
+
+    const calculateBMR = () => {
+        const { weight, height, age, gender, activity } = formData;
+        let bmr = gender === 'male' 
+            ? 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age)
+            : 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age);
+        return (bmr * ACTIVITY_LEVELS[activity]).toFixed(2);
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        if (validateForm()) {
+            const bmi = calculateBMI();
+            const bmr = calculateBMR();
+            setResults({ bmi, bmr });
+        }
+    };
+
+    return (
+        <div className="dark bg-gray-900 min-h-screen p-4 sm:p-8">
+            <h1 className="text-3xl font-bold text-center text-white mb-8">BMI & BMR Calculator</h1>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Input Card */}
+                <Card className="md:col-span-1">
+                    <CardHeader>
+                        <CardTitle>Enter Details</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <form onSubmit={handleSubmit}>
+                            <div className="space-y-4">
+                                <Input type="number" name="weight" value={formData.weight} onChange={handleChange} label="Weight (kg)" error={errors.weight} />
+                                <Input type="number" name="height" value={formData.height} onChange={handleChange} label="Height (cm)" error={errors.height} />
+                                <Input type="number" name="age" value={formData.age} onChange={handleChange} label="Age" error={errors.age} />
+                                <Select name="gender" value={formData.gender} onChange={handleChange}>
+                                    <SelectItem value="male">Male</SelectItem>
+                                    <SelectItem value="female">Female</SelectItem>
+                                </Select>
+                                <Select name="activity" value={formData.activity} onChange={handleChange}>
+                                    {Object.entries(ACTIVITY_LEVELS).map(([key, value]) => 
+                                        <SelectItem key={key} value={key}>{key.replace(/([A-Z])/g, ' $1').trim()}</SelectItem>
+                                    )}
+                                </Select>
+                            </div>
+                            <Button type="submit" className="mt-4 w-full">Calculate</Button>
+                        </form>
+                    </CardContent>
+                </Card>
+
+                {/* Results Card */}
+                <Card className="md:col-span-1">
+                    <CardHeader>
+                        <CardTitle>Results</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        {results.bmi === null ? 
+                            "No results" : 
+                            <>
+                                <p>BMI: {results.bmi}</p>
+                                <p>BMR: {results.bmr} calories/day</p>
+                            </>
+                    </CardContent>
+                </Card>
+
+                {/* BMI Categories Card */}
+                <Card className="md:col-span-1">
+                    <CardHeader>
+                        <CardTitle>BMI Categories</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr>
+                                    <th className="text-left">BMI Range</th>
+                                    <th className="text-left">Category</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Below 18.5</td><td>Underweight</td></tr>
+                                <tr><td>18.5 - 24.9</td><td>Normal Weight</td></tr>
+                                <tr><td>25 - 29.9</td><td>Overweight</td></tr>
+                                <tr><td>30 and Above</td><td>Obese</td></tr>
+                            </tbody>
+                        </table>
+                    </CardContent>
+                </Card>
+            </div>
+        </div>
+    );
+};
+
+export default App;
