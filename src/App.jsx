@@ -1,112 +1,123 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-const CalculatorButton = ({ children, onClick, color = 'gray' }) => {
-  const [isHovered, setIsHovered] = useState(false);
+const CalculatorButton = ({ children, onClick, className = '' }) => (
+  <Button
+    variant="outline"
+    className={`border-none w-full h-16 text-lg shadow-lg transform transition-all hover:scale-105 active:scale-95 ${className}`}
+    onClick={onClick}>
+    {children}
+  </Button>
+);
 
-  return (
-    <Button
-      variant="outline"
-      className={`rounded-full w-16 h-16 flex items-center justify-center shadow-lg transform transition-all hover:scale-110 ${isHovered ? 'scale-110' : ''} ${color === 'green' ? 'bg-green-500 hover:bg-green-600' : color === 'red' ? 'bg-red-500 hover:bg-red-600' : 'bg-gray-300 hover:bg-gray-400'}`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      onClick={onClick}
-    >
-      {children}
-    </Button>
-  );
-};
+const Display = ({ expression, result }) => (
+  <div className="mb-4 p-4 bg-gray-800 text-right rounded-lg shadow-inner">
+    <div className="text-amber-500 text-sm mb-1">{expression}</div>
+    <div className="text-white text-2xl">{result || expression}</div>
+  </div>
+);
 
 function App() {
-  const [display, setDisplay] = useState('0');
-  const [firstOperand, setFirstOperand] = useState(null);
-  const [operation, setOperation] = useState(null);
+  const mainOperators = ['+', '-', '*', '/'];
+  const otherOperators = ['AC', '+/-', '%'];
 
-  const handleNumber = (num) => {
-    setDisplay(prev => (prev === '0' ? num : prev + num));
-  };
+  const [expression, setExpression] = useState('');
+  const [expressionToCalc, setExpressionToCalc] = useState('');
+  const [result, setResult] = useState('');
 
-  const handleOperation = (op) => {
-    if (firstOperand === null) {
-      setFirstOperand(parseFloat(display));
-      setOperation(op);
-      setDisplay('0');
+  const [lastClickOperator, setLastClickOperator] = useState(false);
+  const [lastClickEqual, setLastClickEqual] = useState(false);
+
+  const handleButtonClick = useCallback((value) => {
+    if (value === '=') {
+      if (lastClickEqual) return;
+      setLastClickEqual(true);
+      setLastClickOperator(false);
+
+      try {
+        // Using eval for simplicity; in production, use a safer method or library for calculation
+        const calculatedResult = eval(expressionToCalc);
+        setResult(calculatedResult.toString());
+        setExpression(prev => `${prev} = ${calculatedResult}`);
+      } catch (e) {
+        setResult('Error');
+      }
+    } else if (otherOperators.includes(value)) {
+        if (value === 'AC') {
+          setExpressionToCalc('');
+          setExpression('');
+          setResult('');
+        } else if (value === '+/-') {
+          setExpressionToCalc(prev => {
+            if (prev[0] === '-') return prev.slice(1);
+            else return `-${prev}`;
+          });
+          setExpression(expressionToCalc);
+        } else if (value === '%') {
+          if (lastClickOperator) return;
+          setExpressionToCalc(prev => prev + '/100');
+          setExpression(prev => prev + value);
+        }
+
+        setLastClickEqual(false);
+        setLastClickOperator(false);
+    } else if (mainOperators.includes(value)) {
+      if (lastClickOperator) return;
+
+      if (lastClickEqual) {
+        setExpressionToCalc(result);
+        setExpression(result);
+        if (result !== '') setResult('');
+      }
+
+      setExpressionToCalc(prev => prev + value);
+      setExpression(prev => prev + value);
+
+      setLastClickEqual(false);
+      setLastClickOperator(true);
     } else {
-      calculate();
-      setOperation(op);
+      if (lastClickEqual) {
+        setExpressionToCalc('');
+        setExpression('');
+        setResult('');
+      }
+
+      setLastClickEqual(false);
+      setLastClickOperator(false);
+
+      setExpressionToCalc(prev => prev + value);
+      setExpression(prev => prev + value);
+
+      if (result !== '') setResult('');
     }
-  };
-
-  const calculate = () => {
-    const secondOperand = parseFloat(display);
-    let result = 0;
-    switch (operation) {
-      case '+':
-        result = firstOperand + secondOperand;
-        break;
-      case '-':
-        result = firstOperand - secondOperand;
-        break;
-      case '*':
-        result = firstOperand * secondOperand;
-        break;
-      case '/':
-        result = firstOperand / secondOperand;
-        break;
-      default:
-        return;
-    }
-    setDisplay(String(result));
-    setFirstOperand(null);
-  };
-
-  const handleEqual = () => {
-    if (firstOperand !== null && operation) {
-      calculate();
-    }
-  };
-
-  const handleClear = () => {
-    setDisplay('0');
-    setFirstOperand(null);
-    setOperation(null);
-  };
-
-  const handleSign = () => {
-    setDisplay(prev => String(-parseFloat(prev)));
-  };
-
-  const handlePercent = () => {
-    setDisplay(prev => String(parseFloat(prev) / 100));
-  };
+  }, [expression, result]);
 
   return (
-    <div className="bg-gray-700 p-4 rounded-lg w-full max-w-sm mx-auto mt-10">
-      <div className="bg-white p-4 rounded-t-lg text-right text-2xl mb-4">
-        {display}
-      </div>
-      <div className="grid grid-cols-4 gap-2">
-        <CalculatorButton onClick={handleClear} color="green">AC</CalculatorButton>
-        <CalculatorButton onClick={handleSign} color="green">+/-</CalculatorButton>
-        <CalculatorButton onClick={handlePercent} color="green">%</CalculatorButton>
-        <CalculatorButton onClick={() => handleOperation('/')} color="green">/</CalculatorButton>
-        {[7, 8, 9].map(num => (
-          <CalculatorButton key={num} onClick={() => handleNumber(String(num))}>{num}</CalculatorButton>
-        ))}
-        <CalculatorButton onClick={() => handleOperation('*')} color="green">*</CalculatorButton>
-        {[4, 5, 6].map(num => (
-          <CalculatorButton key={num} onClick={() => handleNumber(String(num))}>{num}</CalculatorButton>
-        ))}
-        <CalculatorButton onClick={() => handleOperation('-')} color="green">-</CalculatorButton>
-        {[1, 2, 3].map(num => (
-          <CalculatorButton key={num} onClick={() => handleNumber(String(num))}>{num}</CalculatorButton>
-        ))}
-        <CalculatorButton onClick={() => handleOperation('+')} color="green">+</CalculatorButton>
-        <div></div>
-        <CalculatorButton onClick={() => handleNumber('0')} className="col-span-2 w-auto">0</CalculatorButton>
-        <CalculatorButton onClick={() => handleNumber('.')}>.</CalculatorButton>
-        <CalculatorButton onClick={handleEqual} color="red">=</CalculatorButton>
-      </div>
+    <div className="flex items-center justify-center min-h-screen bg-gray-200 dark:bg-gray-900">
+      <Card className="w-full max-w-sm p-7 bg-gray-700 shadow-xl">
+        <CardContent className="p-0 space-y-2">
+          <Display expression={expression} result={result} />
+          <div className="grid grid-cols-4 gap-5">
+            {['AC', '+/-', '%', '/',
+              '7', '8', '9', '*',
+              '4', '5', '6', '-',
+              '1', '2', '3', '+',
+              '(', '0', ')', '='].map(btn => (
+                <CalculatorButton
+                  key={btn}
+                  onClick={() => handleButtonClick(btn)}
+                  className={
+                    btn === '=' ? 'bg-red-400 text-white' :
+                    mainOperators.includes(btn) ? 'bg-amber-500 text-white' :
+                    otherOperators.includes(btn) ? 'bg-gray-500 text-white' : 'bg-gray-300'
+                  }>
+                  {btn}
+                </CalculatorButton>
+              ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
