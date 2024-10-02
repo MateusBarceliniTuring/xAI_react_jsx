@@ -29,6 +29,24 @@ function App() {
   const [lastClickOperator, setLastClickOperator] = useState(false);
   const [lastClickEqual, setLastClickEqual] = useState(false);
 
+  const regex = /(\d+(\.\d+)?|\+|\-|\*|\/)/g;
+
+  const getFinalExpressionToCalc = () => {
+    const items = expressionToCalc.match(regex);
+    let newExpression = '';
+
+    items.forEach(item => {
+        if (/\d+/.test(item)) {
+          const newValue = parseFloat(item);
+          newExpression += newValue;
+        } else {
+          newExpression += item;
+        }
+    });
+
+    return newExpression;
+  }
+
   const handleButtonClick = useCallback((value) => {
     if (value === '=') {
       if (lastClickEqual) return;
@@ -37,7 +55,7 @@ function App() {
 
       try {
         // Using eval for simplicity; in production, use a safer method or library for calculation
-        const calculatedResult = eval(expressionToCalc);
+        const calculatedResult = eval(getFinalExpressionToCalc());
         setResult(calculatedResult.toString());
         setExpression(prev => `${prev} = ${calculatedResult}`);
       } catch (e) {
@@ -103,12 +121,12 @@ function App() {
               '7', '8', '9', '*',
               '4', '5', '6', '-',
               '1', '2', '3', '+',
-              '(', '0', ')', '='].map(btn => (
+              '0', '.', '(', ')', '='].map(btn => (
                 <CalculatorButton
                   key={btn}
                   onClick={() => handleButtonClick(btn)}
                   className={
-                    btn === '=' ? 'bg-red-400 text-white' :
+                    btn === '=' ? 'bg-red-400 text-white col-span-4' :
                     mainOperators.includes(btn) ? 'bg-amber-500 text-white' :
                     otherOperators.includes(btn) ? 'bg-gray-500 text-white' : 'bg-gray-300'
                   }>
