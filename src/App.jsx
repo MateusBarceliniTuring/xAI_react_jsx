@@ -1,120 +1,70 @@
-import React, { useState } from 'react';
+// App.jsx
+import React, { useState, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
-const Calculator = () => {
+const operators = ['AC', '+/-', '%', '/', '*', '-', '+'];
+const numbers = ['7', '8', '9', '4', '5', '6', '1', '2', '3', '0', '.'];
+const specialChars = ['(', ')'];
+
+function App() {
   const [display, setDisplay] = useState('0');
-  const [firstOperand, setFirstOperand] = useState(null);
-  const [operator, setOperator] = useState(null);
-  const [waitingForOperand, setWaitingForOperand] = useState(false);
+  const [expression, setExpression] = useState('');
+  const [result, setResult] = useState('');
 
-  const inputDigit = (digit) => {
-    if (waitingForOperand) {
-      setDisplay(String(digit));
-      setWaitingForOperand(false);
+  const handleButtonClick = (value) => {
+    if (value === 'AC') {
+      setDisplay('0');
+      setExpression('');
+      setResult('');
+    } else if (value === '=') {
+      try {
+        const evalResult = evalExpression(expression + display);
+        setResult(expression + display);
+        setDisplay(evalResult.toString());
+        setExpression('');
+      } catch (e) {
+        setDisplay('Error');
+      }
+    } else if (value === '+/-') {
+      setDisplay(display.charAt(0) === '-' ? display.slice(1) : '-' + display);
+    } else if (operators.includes(value)) {
+      setExpression(prev => prev + display + value);
+      setDisplay('0');
     } else {
-      setDisplay(display === '0' ? String(digit) : display + digit);
+      setDisplay(prev => (prev === '0' || operators.includes(prev) ? value : prev + value));
+      setExpression(prev => prev + value);
     }
   };
 
-  const inputDecimal = () => {
-    if (!display.includes('.')) {
-      setDisplay(display + '.');
-    }
+  const evalExpression = (expr) => {
+    // Simple eval wrapper with error handling
+    return Function(`'use strict'; return (${expr})`)();
   };
-
-  const clearDisplay = () => {
-    setDisplay('0');
-    setFirstOperand(null);
-    setOperator(null);
-  };
-
-  const handleOperator = (nextOperator) => {
-    const inputValue = parseFloat(display);
-
-    if (firstOperand === null) {
-      setFirstOperand(inputValue);
-    } else if (operator) {
-      const result = performCalculation();
-      setDisplay(String(result));
-      setFirstOperand(result);
-    }
-
-    setWaitingForOperand(true);
-    setOperator(nextOperator);
-  };
-
-  const performCalculation = () => {
-    const secondOperand = parseFloat(display);
-    switch (operator) {
-      case '+': return firstOperand + secondOperand;
-      case '-': return firstOperand - secondOperand;
-      case '*': return firstOperand * secondOperand;
-      case '/': 
-        if (secondOperand === 0) {
-          alert('Division by zero is not allowed');
-          return firstOperand;
-        }
-        return firstOperand / secondOperand;
-      case '%': return firstOperand % secondOperand;
-      default: return secondOperand;
-    }
-  };
-
-  const calculate = () => {
-    if (!waitingForOperand) {
-      const result = performCalculation();
-      setDisplay(String(result));
-      setFirstOperand(result);
-      setOperator(null);
-    }
-  };
-
-  const toggleSign = () => {
-    setDisplay(String(parseFloat(display) * -1));
-  };
-
-  const ButtonComponent = ({ children, onClick, color = 'gray' }) => (
-    <Button 
-      className={`w-16 h-16 rounded-full flex items-center justify-center shadow-md transition-transform transform hover:scale-105 active:scale-95 ${color === 'green' ? 'bg-green-500 hover:bg-green-600' : color === 'red' ? 'bg-red-500 hover:bg-red-600' : 'bg-gray-300 hover:bg-gray-400'}`}
-      onClick={onClick}>
-      {children}
-    </Button>
-  );
 
   return (
-    <div className="bg-gray-700 p-4 rounded-lg w-full max-w-sm mx-auto mt-10">
-      <div className="bg-white p-4 rounded-t-lg text-right text-2xl mb-4">
-        {display}
-      </div>
-      <div className="grid grid-cols-4 gap-2">
-        {['AC', '+/-', '%', '/', '7', '8', '9', '*', '4', '5', '6', '-', '1', '2', '3', '+', '0', '.', '=']
-          .map(key => {
-            let color = 'gray';
-            if (['+', '-', '*', '/', '%'].includes(key)) color = 'green';
-            if (key === '=') color = 'red';
-            if (key === 'AC') color = 'red';
-
-            return (
-              <ButtonComponent 
-                key={key} 
-                onClick={() => {
-                  if (key === 'AC') clearDisplay();
-                  else if (['+', '-', '*', '/', '%'].includes(key)) handleOperator(key);
-                  else if (key === '=') calculate();
-                  else if (key === '+/-') toggleSign();
-                  else if (key === '.') inputDecimal();
-                  else inputDigit(key);
-                }}
-                color={color}>
-                {key}
-              </ButtonComponent>
-            );
-          })}
-      </div>
+    <div className="bg-gray-800 min-h-screen flex items-center justify-center p-4">
+      <Card className="w-full max-w-sm bg-gray-700 shadow-xl">
+        <CardContent className="p-4">
+          <div className="text-right mb-4">
+            <div className="text-gray-400 text-sm">{result}</div>
+            <div className="text-amber-500 text-3xl" id="display">{display}</div>
+          </div>
+          <div className="grid grid-cols-4 gap-2">
+            {['AC', '+/-', '%', '/', ...numbers, '*', '-', '+', '='].map((btn) => (
+              <Button 
+                key={btn} 
+                variant={operators.includes(btn) ? "outline" : (btn === '=' ? "secondary" : "default")}
+                className={`hover:scale-105 transition-transform ${operators.includes(btn) ? 'bg-amber-600 hover:bg-amber-500' : 'bg-gray-200 hover:bg-gray-300 text-black'} h-16 rounded-full shadow-lg`}
+                onClick={() => handleButtonClick(btn)}>
+                {btn}
+              </Button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
-};
-
-export default function App() {
-  return <Calculator />;
 }
+
+export default App;
