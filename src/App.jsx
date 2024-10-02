@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
+import React, { useState } from 'react';
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -9,11 +9,8 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
 
 import {
@@ -21,7 +18,6 @@ import {
   TableBody,
   TableCaption,
   TableCell,
-  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -32,7 +28,6 @@ function App() {
   const [historic, setHistoric] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editMedication, setEditMedication] = useState(null);
-  let lastId = 1;
 
   const frequencyList = {
     daily: 'Daily',
@@ -222,13 +217,13 @@ function App() {
                 <TableCell className="text-center">{item.completed
                   ? 'Yes'
                   : <Button variant="link"
-                          onClick={() => {
-                            const updatedHistory = [...historic];
-                            updatedHistory[index].completed = !updatedHistory[index].completed;
-                            setHistoric(updatedHistory);
+                    onClick={() => {
+                      const updatedHistory = [...historic];
+                      updatedHistory[index].completed = !updatedHistory[index].completed;
+                      setHistoric(updatedHistory);
                     }}>
-                      Mark as done
-                    </Button>}
+                    Mark as done
+                  </Button>}
                 </TableCell>
               </TableRow>
             ))}
