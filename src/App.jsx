@@ -197,7 +197,7 @@ function App() {
             <MenubarTrigger><div className="cursor-pointer text-black">☰</div></MenubarTrigger>
             <MenubarContent>
               {['Products', 'Cart', 'Requests'].map(page => (
-                <MenubarItem onClick={() => setActivePage(page)}>{page}</MenubarItem>
+                <MenubarItem key={page} onClick={() => setActivePage(page)}>{page}</MenubarItem>
               ))}
             </MenubarContent>
           </MenubarMenu>
