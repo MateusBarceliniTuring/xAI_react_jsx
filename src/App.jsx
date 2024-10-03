@@ -7,20 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Separator } from "@/components/ui/separator"
 
-// Mini Card Component
-const MiniCard = ({ title, value, percentage }) => {
-  let bgColor = 'bg-green-500';
-  if (percentage < 50) bgColor = 'bg-red-500';
-  else if (percentage < 75) bgColor = 'bg-orange-500';
-
-  return (
-    <div className={`p-4 m-2 shadow-lg rounded-lg ${bgColor}`}>
-      <h3 className="text-sm font-semibold">{title}</h3>
-      <p className="text-lg">{value}</p>
-    </div>
-  );
-};
-
 export default function App() {
   const [tab, setTab] = useState('profile');
 
@@ -34,27 +20,20 @@ export default function App() {
   });
 
   const [daily, setDaily] = useState([]);
-  const [submitted, setSubmitted] = useState(false);
-
-  // Validation and form submission logic would go here
-  const handleSubmit = (e, type) => {
-    e.preventDefault();
-    if (type === 'profile') {
-      // Validate profile form
-    } else if (type === 'daily') {
-      setSubmitted(true);
-    }
-  };
 
   const calculatePercentage = (done, goal) => {
-    return ((done / goal) * 100).toFixed(2);
+    return ((done / goal) * 100).toFixed(0);
   };
 
   const handleProfileForm = (newForm) => {
+    newForm.calorieGoal = parseInt(newForm.calorieGoal);
+    newForm.workoutGoal = parseInt(newForm.workoutGoal);
     setProfile(newForm);
   };
 
   const handleDailyUpdateForm = (newForm) => {
+    newForm.calorie = parseInt(newForm.calorie);
+    newForm.workout = parseInt(newForm.workout);
     setDaily(prev => [...prev, newForm]);
   }
 
@@ -129,8 +108,8 @@ export default function App() {
   }
 
   const TabDailyUpdate = () => {
-    const [calorie, setCalorie] = useState(null);
-    const [workout, setWorkout] = useState(null);
+    const [calorie, setCalorie] = useState(0);
+    const [workout, setWorkout] = useState(0);
 
     return (
       <div>
@@ -163,19 +142,50 @@ export default function App() {
 
         <Separator className="mt-5 mb-5" />
 
-        {submitted && (
-          <div className="mt-4">
-            <div className="flex flex-wrap justify-center">
-              <MiniCard title="Calorie Goal" value={`${calculatePercentage(daily.calories, profileCalorieGoal)}%`} percentage={calculatePercentage(daily.calories, profileCalorieGoal)} />
-              <MiniCard title="Workout Goal" value={`${calculatePercentage(daily.workoutTime, profileWorkoutGoal)}%`} percentage={calculatePercentage(daily.workoutTime, profileWorkoutGoal)} />
-              <MiniCard title="Total Calories" value={`${daily.calories} cal`} />
-              <MiniCard title="Total Workout Time" value={`${daily.workoutTime} min`} />
-            </div>
+        <div className="mt-4">
+          <div className="flex flex-wrap justify-between">
+            <MiniCard title="Calorie Goal" type="calorie" />
+            <MiniCard title="Workout Goal" type="workout" />
+            <MiniCard title="Total Calories" type="calorie" isTotal={true} />
+            <MiniCard title="Total Workout Time" type="workout" isTotal={true} />
           </div>
-        )}
+        </div>
       </div>
     );
   }
+
+  const MiniCard = ({ title, type, isTotal }) => {
+    let value = 0, goal = 0, sufix = '';
+
+    if (type == 'calorie') {
+      value = daily.reduce((a,c) => a + c.calorie, 0);
+      goal = profile.calorieGoal || 0;
+      sufix = 'cal';
+    } else if (type == 'workout') {
+      value = daily.reduce((a,c) => a + c.workout, 0);
+      goal = profile.workoutGoal || 0;
+      sufix = 'min';
+    }
+
+    let bgColor = '';
+    if (!isTotal) {
+      const percentage = calculatePercentage(value, goal);
+      bgColor = 'bg-green-500';
+      if (percentage < 50) bgColor = 'bg-red-500';
+      else if (percentage < 75) bgColor = 'bg-orange-500';
+
+      value = `${percentage} %`
+    } else {
+      value = `${value} ${sufix}`
+    }
+
+    return (
+      <div className={`w-[40%] max-h-[40vh] p-4 m-3 shadow-lg rounded-lg ${bgColor} flex flex-col justify-center items-center text-center`}>
+        <h3 className="text-sm font-semibold">{title}</h3>
+        <p className="text-lg">{value}</p>
+      </div>
+    );
+  };
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100">
