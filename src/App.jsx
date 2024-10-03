@@ -22,6 +22,7 @@ export default function App() {
   const [daily, setDaily] = useState([]);
 
   const calculatePercentage = (done, goal) => {
+    if (goal <= 0) return 0;
     return ((done / goal) * 100).toFixed(0);
   };
 
@@ -82,27 +83,25 @@ export default function App() {
               step={1}
               value={[weight]} />
         
-        <div className='flex'>
-          <div className='mr-5'>
-            <Label>Calorie Goal</Label>
-            <Input onChange={(e) => setCalorieGoal(e.target.value)}
-                  placeholder="Calorie goal"
-                  required
-                  type="number"
-                  value={calorieGoal} />
-          </div>
-
-          <div className='ml-5'>
-            <Label>Workout Goal (min)</Label>
-            <Input onChange={(e) => setWorkoutGoal(e.target.value)}
-                  placeholder="Workout time goal"
-                  required
-                  type="number"
-                  value={workoutGoal} />
-          </div>
+        <div className="w-full mt-3">
+          <Label>Calorie Goal</Label>
+          <Input onChange={(e) => setCalorieGoal(e.target.value)}
+                placeholder="Calorie goal"
+                required
+                type="number"
+                value={calorieGoal} />
         </div>
 
-        <Button className="mt-5" type="submit">Submit Profile</Button>
+        <div className="w-full mt-3">
+          <Label>Workout Goal (min)</Label>
+          <Input onChange={(e) => setWorkoutGoal(e.target.value)}
+                placeholder="Workout time goal"
+                required
+                type="number"
+                value={workoutGoal} />
+        </div>
+
+        <Button className="mt-3" type="submit">Submit Profile</Button>
       </form>
     );
   }
@@ -117,8 +116,8 @@ export default function App() {
           e.preventDefault();
           handleDailyUpdateForm({ calorie, workout });
         }}>
-          <div className='flex'>
-            <div className='mr-5'>
+          <div className="flex flex-wrap">
+            <div className="w-full">
               <Label>Calorie</Label>
               <Input onChange={(e) => setCalorie(e.target.value)}
                     placeholder="Calorie"
@@ -127,7 +126,7 @@ export default function App() {
                     value={calorie} />
             </div>
 
-            <div className='ml-5'>
+            <div className="w-full mt-3">
               <Label>Workout (min)</Label>
               <Input onChange={(e) => setWorkout(e.target.value)}
                     placeholder="Workout time"
@@ -137,13 +136,13 @@ export default function App() {
             </div>
           </div>
 
-          <Button className="mt-5" type="submit">Add Consumed Values</Button>
+          <Button className="mt-3" type="submit">Add Consumed Values</Button>
         </form>
 
-        <Separator className="mt-5 mb-5" />
+        <Separator className="mt-5 mb-3" />
 
         <div className="mt-4">
-          <div className="flex flex-wrap justify-between">
+          <div className="flex flex-wrap justify-center">
             <MiniCard title="Calorie Goal" type="calorie" />
             <MiniCard title="Workout Goal" type="workout" />
             <MiniCard title="Total Calories" type="calorie" isTotal={true} />
@@ -176,11 +175,11 @@ export default function App() {
 
       value = `${percentage} %`
     } else {
-      value = `${value} ${sufix}`
+      value = `${value} ${sufix} / ${goal}`
     }
 
     return (
-      <div className={`w-[40%] max-h-[40vh] p-4 m-3 shadow-lg rounded-lg ${bgColor} flex flex-col justify-center items-center text-center`}>
+      <div className={`w-full md:w-[40%] p-4 m-3 shadow-xl rounded-lg ${bgColor} flex flex-col justify-center items-center text-center`}>
         <h3 className="text-sm font-semibold">{title}</h3>
         <p className="text-lg">{value}</p>
       </div>
@@ -189,7 +188,7 @@ export default function App() {
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100">
-      <Card className="w-[80%] max-h-[80vh] shadow-xl">
+      <Card className="w-[80%] min-h-0 flex flex-col shadow-xl">
         <CardHeader className="bg-blue-500 text-white text-center rounded">
           <CardTitle>Health Tracker</CardTitle>
         </CardHeader>
