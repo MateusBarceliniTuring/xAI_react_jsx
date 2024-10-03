@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
+import { Separator } from "@/components/ui/separator"
 
 // Mini Card Component
 const MiniCard = ({ title, value, percentage }) => {
@@ -21,8 +23,17 @@ const MiniCard = ({ title, value, percentage }) => {
 
 export default function App() {
   const [tab, setTab] = useState('profile');
-  const [profile, setProfile] = useState({ name: '', age: 20, height: 170, weight: 60, calorieGoal: 2000, workoutGoal: 60 });
-  const [daily, setDaily] = useState({ calories: 0, workoutTime: 0 });
+
+  const [profile, setProfile] = useState({
+    name: '',
+    age: null,
+    height: null,
+    weight: null,
+    calorieGoal: null,
+    workoutGoal: null
+  });
+
+  const [daily, setDaily] = useState([]);
   const [submitted, setSubmitted] = useState(false);
 
   // Validation and form submission logic would go here
@@ -39,42 +50,152 @@ export default function App() {
     return ((done / goal) * 100).toFixed(2);
   };
 
+  const handleProfileForm = (newForm) => {
+    setProfile(newForm);
+  };
+
+  const handleDailyUpdateForm = (newForm) => {
+    setDaily(prev => [...prev, newForm]);
+  }
+
+  const TabProfileForm = ({ onSubmit }) => {
+    const [name, setName] = useState('');
+    const [age, setAge] = useState(34);
+    const [height, setHeight] = useState(150);
+    const [weight, setWeight] = useState(50);
+    const [calorieGoal, setCalorieGoal] = useState(1);
+    const [workoutGoal, setWorkoutGoal] = useState(1);
+
+    return (
+      <form onSubmit={(e) => {
+        e.preventDefault();
+        onSubmit({ name, age, height, weight, calorieGoal, workoutGoal });
+      }}>
+        <Label>Name</Label>
+        <Input className="mb-5"
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Full Name"
+              required
+              type="text"
+              value={name} />
+
+        <Label>Age: {age}</Label>
+        <Slider className="mb-5 mt-3"
+              max={100}
+              min={1}
+              onValueChange={(value) => setAge(value[0])}
+              step={1}
+              value={[age]} />
+
+        <Label>Height ({height} cm)</Label>
+        <Slider className="mb-5 mt-3"
+              max={300}
+              min={1}
+              onValueChange={(value) => setHeight(value[0])}
+              step={1}
+              value={[height]} />
+
+        <Label>Weight ({weight} kg)</Label>
+        <Slider className="mb-5 mt-3"
+              max={200}
+              min={1}
+              onValueChange={(value) => setWeight(value[0])}
+              step={1}
+              value={[weight]} />
+        
+        <div className='flex'>
+          <div className='mr-5'>
+            <Label>Calorie Goal</Label>
+            <Input onChange={(e) => setCalorieGoal(e.target.value)}
+                  placeholder="Calorie goal"
+                  required
+                  type="number"
+                  value={calorieGoal} />
+          </div>
+
+          <div className='ml-5'>
+            <Label>Workout Goal (min)</Label>
+            <Input onChange={(e) => setWorkoutGoal(e.target.value)}
+                  placeholder="Workout time goal"
+                  required
+                  type="number"
+                  value={workoutGoal} />
+          </div>
+        </div>
+
+        <Button className="mt-5" type="submit">Submit Profile</Button>
+      </form>
+    );
+  }
+
+  const TabDailyUpdate = () => {
+    const [calorie, setCalorie] = useState(null);
+    const [workout, setWorkout] = useState(null);
+
+    return (
+      <div>
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          handleDailyUpdateForm({ calorie, workout });
+        }}>
+          <div className='flex'>
+            <div className='mr-5'>
+              <Label>Calorie</Label>
+              <Input onChange={(e) => setCalorie(e.target.value)}
+                    placeholder="Calorie"
+                    required
+                    type="number"
+                    value={calorie} />
+            </div>
+
+            <div className='ml-5'>
+              <Label>Workout (min)</Label>
+              <Input onChange={(e) => setWorkout(e.target.value)}
+                    placeholder="Workout time"
+                    required
+                    type="number"
+                    value={workout} />
+            </div>
+          </div>
+
+          <Button className="mt-5" type="submit">Add Consumed Values</Button>
+        </form>
+
+        <Separator className="mt-5 mb-5" />
+
+        {submitted && (
+          <div className="mt-4">
+            <div className="flex flex-wrap justify-center">
+              <MiniCard title="Calorie Goal" value={`${calculatePercentage(daily.calories, profileCalorieGoal)}%`} percentage={calculatePercentage(daily.calories, profileCalorieGoal)} />
+              <MiniCard title="Workout Goal" value={`${calculatePercentage(daily.workoutTime, profileWorkoutGoal)}%`} percentage={calculatePercentage(daily.workoutTime, profileWorkoutGoal)} />
+              <MiniCard title="Total Calories" value={`${daily.calories} cal`} />
+              <MiniCard title="Total Workout Time" value={`${daily.workoutTime} min`} />
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100">
       <Card className="w-[80%] max-h-[80vh] shadow-xl">
-        <CardHeader className="bg-blue-500 text-white text-center">
+        <CardHeader className="bg-blue-500 text-white text-center rounded">
           <CardTitle>Health Tracker</CardTitle>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="profile" value={tab} onValueChange={setTab}>
-            <TabsList>
+          <Tabs className="w-full" defaultValue="profile" value={tab} onValueChange={setTab}>
+            <TabsList className="mt-5">
               <TabsTrigger value="profile">Profile</TabsTrigger>
               <TabsTrigger value="daily">Daily Update</TabsTrigger>
             </TabsList>
+
             <TabsContent value="profile">
-              <form onSubmit={(e) => handleSubmit(e, 'profile')}>
-                <Input type="text" placeholder="Full Name" required value={profile.name} onChange={(e) => setProfile({...profile, name: e.target.value})} />
-                <Slider min={1} max={100} value={[profile.age]} onValueChange={(value) => setProfile({...profile, age: value[0]})} label="Age" />
-                {/* Similar inputs for height, weight, etc. */}
-                <Button type="submit">Submit Profile</Button>
-              </form>
+              <TabProfileForm onSubmit={handleProfileForm} />
             </TabsContent>
+
             <TabsContent value="daily">
-              <form onSubmit={(e) => handleSubmit(e, 'daily')}>
-                <Input type="number" placeholder="Calories Consumed" required value={daily.calories} onChange={(e) => setDaily({...daily, calories: e.target.value})} />
-                <Input type="number" placeholder="Workout Time (minutes)" required value={daily.workoutTime} onChange={(e) => setDaily({...daily, workoutTime: e.target.value})} />
-                <Button type="submit">Update Daily Stats</Button>
-              </form>
-              {submitted && (
-                <div className="mt-4">
-                  <div className="flex flex-wrap justify-center">
-                    <MiniCard title="Calorie Goal" value={`${calculatePercentage(daily.calories, profile.calorieGoal)}%`} percentage={calculatePercentage(daily.calories, profile.calorieGoal)} />
-                    <MiniCard title="Workout Goal" value={`${calculatePercentage(daily.workoutTime, profile.workoutGoal)}%`} percentage={calculatePercentage(daily.workoutTime, profile.workoutGoal)} />
-                    <MiniCard title="Total Calories" value={`${daily.calories} cal`} />
-                    <MiniCard title="Total Workout Time" value={`${daily.workoutTime} min`} />
-                  </div>
-                </div>
-              )}
+              <TabDailyUpdate />
             </TabsContent>
           </Tabs>
         </CardContent>
