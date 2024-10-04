@@ -1,34 +1,24 @@
+// App.jsx
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
 function formatTime(ms) {
+  const getSeconds = `0${(ms / 1000) % 60}`.slice(-2);
+  const minutes = `0${Math.floor(ms / 60000)}`.slice(-2);
   const hours = `0${Math.floor(ms / 3600000)}`.slice(-2);
-  const minutes = `0${Math.floor((ms % 3600000) / 60000)}`.slice(-2);
-  const seconds = `0${Math.floor((ms % 60000) / 1000)}`.slice(-2);
-  const milliseconds = ms % 1000;
-  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')},${milliseconds.toString().padStart(3, '0')}`;
-}
-
-const Header = () => {
-  return (
-    <div className="bg-amber-600 p-4 text-white text-center">
-      <header className="text-2xl font-bold">Stopwatch</header>
-    </div>
-  );
+  return `${hours}:${minutes}:${getSeconds},${(ms % 1000).toString().slice(0, 2)}`;
 }
 
 const StopwatchDisplay = ({ time }) => (
-  <div className="text-4xl text-center mb-4">
+  <div className="text-5xl text-center mb-4">
     {formatTime(time)}
   </div>
 );
 
 const ControlButtons = ({ onStart, onStop, onTurn, onClean, show }) => (
   <div className="flex flex-wrap gap-2 justify-center">
-    {show.start && <Button onClick={onStart} className="bg-green-500">Start</Button>}
+    <Button onClick={onStart} className="bg-green-500">Start</Button>
     {show.turn && <Button onClick={onTurn} className="bg-amber-400">Turn</Button>}
     {show.stop && <Button onClick={onStop} className="bg-red-500">Stop</Button>}
     {show.clean && <Button onClick={onClean} className="bg-amber-400">Clean</Button>}
@@ -36,36 +26,31 @@ const ControlButtons = ({ onStart, onStop, onTurn, onClean, show }) => (
 );
 
 const TurnsTable = ({ turns }) => (
-  <Table>
-    <TableHeader>
-      <TableRow>
-        <TableHead>Turn</TableHead>
-        <TableHead>Partial</TableHead>
-        <TableHead>Total</TableHead>
-      </TableRow>
-    </TableHeader>
-    <TableBody>
+  <table className="min-w-full divide-y divide-gray-200 mt-4">
+    <thead className="bg-gray-50">
+      <tr>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Turn</th>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Partial Time</th>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Time</th>
+      </tr>
+    </thead>
+    <tbody className="bg-white divide-y divide-gray-200">
       {turns.map((turn, index) => (
-        <TableRow key={index}>
-          <TableCell>{index + 1}</TableCell>
-          <TableCell>{formatTime(turn.partial)}</TableCell>
-          <TableCell>{formatTime(turn.total)}</TableCell>
-        </TableRow>
+        <tr key={index}>
+          <td className="px-6 py-4">{index + 1}</td>
+          <td className="px-6 py-4">{formatTime(turn.partial)}</td>
+          <td className="px-6 py-4">{formatTime(turn.total)}</td>
+        </tr>
       ))}
-    </TableBody>
-  </Table>
+    </tbody>
+  </table>
 );
 
 export default function App() {
   const [time, setTime] = useState(0);
   const [isActive, setIsActive] = useState(false);
   const [turns, setTurns] = useState([]);
-  const [showButton, setShowButton] = useState({ 
-    start: true,
-    turn: false,
-    stop: false,
-    clean: false
-  });
+  const [showButton, setShowButton] = useState({ turn: false, stop: false, clean: false });
 
   useEffect(() => {
     let interval = null;
@@ -83,12 +68,12 @@ export default function App() {
 
   const startTimer = () => {
     setIsActive(true);
-    setShowButton({ start: false, turn: true, stop: true, clean: false });
+    setShowButton({ turn: true, stop: true, clean: false });
   };
 
   const stopTimer = () => {
     setIsActive(false);
-    setShowButton({ start: true, turn: false, stop: false, clean: true });
+    setShowButton({ turn: false, stop: false, clean: true });
   };
 
   const addTurn = () => {
@@ -99,24 +84,24 @@ export default function App() {
     setTime(0);
     setIsActive(false);
     setTurns([]);
-    setShowButton({ start: true, turn: false, stop: false, clean: false });
+    setShowButton({ turn: false, stop: false, clean: false });
   };
 
   return (
-    <div className="w-full">
-      <Header />
-      <Card className="m-4 p-4">
-        <CardContent className="flex flex-col items-center">
-          <StopwatchDisplay className="text-6xl mb-4" time={time} />
-          <Separator className="mb-4" />
-          <ControlButtons
-            onStart={startTimer}
-            onStop={stopTimer}
-            onTurn={addTurn}
+    <div className="p-4 sm:p-8 bg-amber-100 min-h-screen flex flex-col items-center">
+      <Card className="w-full max-w-lg">
+        <CardHeader>
+          <CardTitle className="text-amber-700">Stopwatch</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <StopwatchDisplay time={time} />
+          <ControlButtons 
+            onStart={startTimer} 
+            onStop={stopTimer} 
+            onTurn={addTurn} 
             onClean={cleanAll}
             show={showButton}
           />
-          <Separator className="mt-4" />
           {turns.length > 0 && <TurnsTable turns={turns} />}
         </CardContent>
       </Card>
