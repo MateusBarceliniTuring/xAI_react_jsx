@@ -114,7 +114,10 @@ export default function App() {
           <CardDescription>Check the score and game history.</CardDescription>
         </CardHeader>
         <CardContent>
-          <p>Player: {playerScore} x AI: {aiScore}</p>
+          <div className="flex justify-between">
+            <ScoreCard title="Player" score={playerScore} />
+            <ScoreCard title="AI" score={aiScore} className="ml-5" />
+          </div>
           <Accordion className="mt-1" type="single" collapsible>
             {history.map((game, index) => (
               <AccordionItem value={`game-${index}`} key={index}>
@@ -131,6 +134,15 @@ export default function App() {
       </Card>
     );
   }
+
+  const ScoreCard = ({ title, score, className = "" }) => {
+    return (
+      <div className={`w-1/2 rounded-md text-center p-3 bg-amber-200 ${className}`}>
+        <h3 className="font-bold">{title}</h3>
+        <p className="text-xl">{score}</p>
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gray-100">
