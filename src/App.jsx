@@ -4,34 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle
-} from "@/components/ui/dialog"
-// import { Progress } from "@/components/ui/progress"
+import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export default function App() {
   const [page, setPage] = useState('home');
@@ -58,12 +33,20 @@ export default function App() {
           <Button onClick={() => setPage('question')} className="bg-amber-600">
             Register Questions
           </Button>
-          <Button onClick={() => setPage('quiz')} className="bg-amber-600">
+          <Button onClick={() => goToQuiz()} className="bg-amber-600">
             Start Quiz
           </Button>
         </CardContent>
       </Card>
     );
+  }
+
+  const goToQuiz = () => {
+    if (questionList.length > 0) {
+      setPage('quiz');
+    } else {
+      alert("Ops! No questions registered.");
+    }
   }
 
   const QuestionPage = () => {
@@ -118,12 +101,12 @@ export default function App() {
         }
         <CardContent>
           <form className="w-full" onSubmit={handleSubmit}>
-            <Input className="mb-3" onChange={e => setQuestion(e.target.value)} placeholder="Question" required value={question} />
-            <Input className="mb-3" onChange={e => setAnswer1(e.target.value)} placeholder="Answer 1" required value={answer1} />
-            <Input className="mb-3" onChange={e => setAnswer2(e.target.value)} placeholder="Answer 2" required value={answer2} />
-            <Input className="mb-3" onChange={e => setAnswer3(e.target.value)} placeholder="Answer 3" required value={answer3} />
-            <Input className="mb-3" onChange={e => setAnswer4(e.target.value)} placeholder="Answer 4" required value={answer4} />
-            <Input className="mb-3" onChange={e => setAnswer5(e.target.value)} placeholder="Answer 5" required value={answer5} />
+            <Input className="mb-3" onChange={e => setQuestion(e.target.value)} placeholder="Question" required value={question} max="100" />
+            <Input className="mb-3" onChange={e => setAnswer1(e.target.value)} placeholder="Answer 1" required value={answer1} max="20" />
+            <Input className="mb-3" onChange={e => setAnswer2(e.target.value)} placeholder="Answer 2" required value={answer2} max="20" />
+            <Input className="mb-3" onChange={e => setAnswer3(e.target.value)} placeholder="Answer 3" required value={answer3} max="20" />
+            <Input className="mb-3" onChange={e => setAnswer4(e.target.value)} placeholder="Answer 4" required value={answer4} max="20" />
+            <Input className="mb-3" onChange={e => setAnswer5(e.target.value)} placeholder="Answer 5" required value={answer5} max="20" />
             <Select onValueChange={setAnswerCorrect} value={answerCorrect}>
               <SelectTrigger>
                 <SelectValue placeholder="What is the right answer?" />
@@ -155,7 +138,7 @@ export default function App() {
           <Card className="m-4 p-4 cursor-pointer"
             key={index} 
             onClick={() => { setQuestionToEdit(q); setModalOpen(true);  }}>
-            <CardContent>
+            <CardContent className="break-words">
               <p>{q.question}</p>
             </CardContent>
           </Card>
@@ -204,7 +187,7 @@ export default function App() {
         setCurrentQuestion(currentQuestion + 1);
         setTimeLeft(20);
       } else {
-        const corrected = questions.length - userAnswers.filter(item => item.correct).length;
+        const corrected = userAnswers.filter(item => item.correct).length;
         const percentage = (corrected / questions.length) * 100;
         const total = questions.length;
 
@@ -227,31 +210,39 @@ export default function App() {
       <>
         {!quizEnded ? (
           <Card className="m-4 p-4">
+            <CardHeader>
+              <CardTitle>Quiz</CardTitle>
+            </CardHeader>
             <CardContent className="p-4">
               <p><Label className="font-bold">Time Left: {timeLeft}s</Label></p>
-              <p><Label className="font-bold">Question {currentQuestion}:</Label></p>
+              <p><Label className="font-bold">Question {currentQuestion+1}:</Label></p>
               <p><Label>{questions[currentQuestion]?.question}</Label></p>
-              <p>
-                <RadioGroup value={currentAnswer} onValueChange={handleAnswer}>
-                  {questions[currentQuestion]?.answers.map((ans, idx) => (
-                    <RadioGroupItem key={idx} value={idx}>{ans}</RadioGroupItem>
-                  ))}
-                </RadioGroup>
-              </p>
+              <p><Label className="font-bold">Answers:</Label></p>
+              <RadioGroup value={currentAnswer} onValueChange={handleAnswer}>
+                {questions[currentQuestion]?.answers.map((ans, idx) => (
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem id={idx} value={idx} />
+                    <Label htmlFor={idx}>{ans}</Label>
+                  </div>
+                ))}
+              </RadioGroup>
             </CardContent>
           </Card>
         ) : (
           <AlertDialog open={quizEnded}>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <h2>Quiz Results</h2>
+                <AlertDialogTitle>Quiz Results</AlertDialogTitle>
+                <AlertDialogDescription>
+                  <p>You got {result.corrected} out of {result.total} questions correct!</p>
+                  <p className={`font-bold ${result.percentage < 25 ? 'text-red-500' : result.percentage < 50 ? 'text-amber-500' : result.percentage < 75 ? 'text-blue-500' : 'text-green-500'}`}>
+                    {result.percentage.toFixed(2)}%
+                  </p>
+                </AlertDialogDescription>
               </AlertDialogHeader>
-              <AlertDialogBody>
-                <p>You got {result.corrected} out of {result.total} questions correct!</p>
-                <p className={`font-bold ${result.percentage < 25 ? 'text-red-500' : result.percentage < 50 ? 'text-amber-500' : result.percentage < 75 ? 'text-blue-500' : 'text-green-500'}`}>
-                  {result.percentage.toFixed(2)}%
-                </p>
-              </AlertDialogBody>
+              <AlertDialogFooter>
+                <AlertDialogCancel onClick={() => setPage('home')}>Close</AlertDialogCancel>
+              </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
         )}
