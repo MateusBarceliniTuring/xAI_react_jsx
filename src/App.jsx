@@ -1,111 +1,137 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 
-function Header() {
-  return (
-    <div className="bg-blue-500 p-4 text-white text-center">
-      <h1 className="text-2xl font-bold">Rock Paper Scissors</h1>
-    </div>
-  );
-}
+export default function App() {
+  const [playerScore, setPlayerScore] = useState(0);
+  const [aiScore, setAIScore] = useState(0);
+  const [history, setHistory] = useState([]);
 
-function GameTab() {
   const [computerChoice, setComputerChoice] = useState(null);
   const [userChoice, setUserChoice] = useState(null);
   const [result, setResult] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [resultColor, setResultColor] = useState("text-black");
 
-  const choices = ['rock', 'paper', 'scissors'];
+  const Header = () => {
+    return (
+      <div className="bg-amber-600 p-4 text-white text-center">
+        <header className="text-2xl font-bold">Rock Paper Scissors</header>
+      </div>
+    );
+  }
 
-  const playGame = () => {
-    setIsPlaying(true);
-    setComputerChoice(choices[Math.floor(Math.random() * choices.length)]);
-  };
+  const GameTab = () => {
+    const choices = ["rock", "paper", "scissors"];
 
-  const determineWinner = (user, computer) => {
-    if (user === computer) return "It's a tie!";
-    if (
-      (user === 'rock' && computer === 'scissors') ||
-      (user === 'paper' && computer === 'rock') ||
-      (user === 'scissors' && computer === 'paper')
-    ) return "You win!";
-    return "AI wins!";
-  };
+    const playGame = () => {
+      setIsPlaying(true);
+      setComputerChoice(choices[Math.floor(Math.random() * choices.length)]);
+      setUserChoice(null);
+      setResult(null);
+    };
 
-  const playAgain = () => {
-    setIsPlaying(false);
-    setUserChoice(null);
-    setComputerChoice(null);
-    setResult(null);
-  };
+    const determineWinner = (user, computer) => {
+      setUserChoice(user);
 
-  return (
-    <div className="p-4 space-y-4">
-      {!isPlaying ? (
-        <Button onClick={playGame}>Play Game</Button>
-      ) : (
-        <>
+      let resultTxt = "", color = "";
+      if (user === computer) {
+        color = "text-black";
+        resultTxt = "It's a tie!";
+      } else if (
+        (user === "rock" && computer === "scissors") ||
+        (user === "paper" && computer === "rock") ||
+        (user === "scissors" && computer === "paper")
+      ) {
+        setPlayerScore(prevScore => prevScore + 1);
+        color = "text-green-500";
+        resultTxt = "You win!";
+      } else {
+        setAIScore(aiScore + 1);
+        color = "text-red-500";
+        resultTxt = "AI wins!";
+      }
+
+      setResultColor(color);
+      setResult(resultTxt);
+
+      setHistory(prev => [...prev, {
+        userChoice: user,
+        aiChoice: computer,
+        result: resultTxt,
+        resultColor: color
+      }]);
+    }
+
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Play</CardTitle>
+          <CardDescription>Click on Play Game button to start.</CardDescription>
+        </CardHeader>
+        <CardContent>
           <div className="flex justify-center space-x-4">
-            {choices.map(choice => (
-              <Button 
-                key={choice} 
-                onClick={() => {
-                  setUserChoice(choice);
-                  setResult(determineWinner(choice, computerChoice));
-                }}
-                disabled={!!userChoice}
-              >
-                {choice}
-              </Button>
-            ))}
+            {!isPlaying ? (
+              <Button className="bg-amber-500" onClick={playGame}>Play Game</Button>
+            ) : (
+              <>
+                {!userChoice && (
+                  choices.map(choice => (
+                    <Button
+                      key={choice}
+                      className="bg-amber-400"
+                      onClick={() => determineWinner(choice, computerChoice)}
+                      disabled={!!userChoice}
+                    >
+                      {choice}
+                    </Button>
+                  ))
+                )}
+
+                {userChoice && (
+                  <div className="text-center mt-4">
+                    <p>Player chose: {userChoice}</p>
+                    <p>AI chose: {computerChoice}</p>
+                    <p className={resultColor}>{result}</p>
+                    <Button className="bg-amber-500 mt-4"  onClick={playGame}>Play Again</Button>
+                  </div>
+                )}
+              </>
+            )}
           </div>
-          {userChoice && (
-            <div className="text-center mt-4">
-              <p>AI chose: {computerChoice}</p>
-              <p className={result === "You win!" ? "text-green-500" : "text-red-500"}>{result}</p>
-              <Button onClick={playAgain}>Play Again</Button>
-            </div>
-          )}
-        </>
-      )}
-    </div>
-  );
-}
+        </CardContent>
+      </Card>
+    );
+  }
 
-function HistoryTab() {
-  const [history, setHistory] = useState([]);
-
-  // Here you would typically update history with each game played
-  // For simplicity, I'm adding a static example
-
-  return (
-    <div className="p-4">
+  const HistoryTab = () => {
+    return (
       <Card>
         <CardHeader>
           <CardTitle>Score</CardTitle>
+          <CardDescription>Check the score and game history.</CardDescription>
         </CardHeader>
         <CardContent>
-          <p>Player: 5 | AI: 3</p>
+          <p>Player: {playerScore} x AI: {aiScore}</p>
+          <Accordion className="mt-1" type="single" collapsible>
+            {history.map((game, index) => (
+              <AccordionItem value={`game-${index}`} key={index}>
+                <AccordionTrigger>Game {index + 1}</AccordionTrigger>
+                <AccordionContent>
+                  <p>Player chose: {game.userChoice}</p>
+                  <p>AI chose: {game.aiChoice}</p>
+                  <p>Result: <span className={game.resultColor}>{game.result}</span></p>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
         </CardContent>
       </Card>
-      <Accordion type="single" collapsible>
-        {history.map((game, index) => (
-          <AccordionItem value={`game-${index}`} key={index}>
-            <AccordionTrigger>Game {index + 1}</AccordionTrigger>
-            <AccordionContent>
-              Player chose: {game.userChoice}, AI chose: {game.aiChoice}. Result: {game.result}
-            </AccordionContent>
-          </AccordionItem>
-        ))}
-      </Accordion>
-    </div>
-  );
-}
+    );
+  }
 
-export default function App() {
   return (
     <div className="min-h-screen bg-gray-100">
       <Header />
