@@ -101,12 +101,12 @@ export default function App() {
         }
         <CardContent>
           <form className="w-full" onSubmit={handleSubmit}>
-            <Input className="mb-3" onChange={e => setQuestion(e.target.value)} placeholder="Question" required value={question} max="100" />
-            <Input className="mb-3" onChange={e => setAnswer1(e.target.value)} placeholder="Answer 1" required value={answer1} max="20" />
-            <Input className="mb-3" onChange={e => setAnswer2(e.target.value)} placeholder="Answer 2" required value={answer2} max="20" />
-            <Input className="mb-3" onChange={e => setAnswer3(e.target.value)} placeholder="Answer 3" required value={answer3} max="20" />
-            <Input className="mb-3" onChange={e => setAnswer4(e.target.value)} placeholder="Answer 4" required value={answer4} max="20" />
-            <Input className="mb-3" onChange={e => setAnswer5(e.target.value)} placeholder="Answer 5" required value={answer5} max="20" />
+            <Input className="mb-3" onChange={e => setQuestion(e.target.value)} placeholder="Question" required value={question} maxLength={100}  />
+            <Input className="mb-3" onChange={e => setAnswer1(e.target.value)} placeholder="Answer 1" required value={answer1} maxLength={20}  />
+            <Input className="mb-3" onChange={e => setAnswer2(e.target.value)} placeholder="Answer 2" required value={answer2} maxLength={20}  />
+            <Input className="mb-3" onChange={e => setAnswer3(e.target.value)} placeholder="Answer 3" required value={answer3} maxLength={20}  />
+            <Input className="mb-3" onChange={e => setAnswer4(e.target.value)} placeholder="Answer 4" required value={answer4} maxLength={20}  />
+            <Input className="mb-3" onChange={e => setAnswer5(e.target.value)} placeholder="Answer 5" required value={answer5} maxLength={20}  />
             <Select onValueChange={setAnswerCorrect} value={answerCorrect}>
               <SelectTrigger>
                 <SelectValue placeholder="What is the right answer?" />
