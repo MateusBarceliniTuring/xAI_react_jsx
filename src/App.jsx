@@ -29,9 +29,8 @@ function App() {
   const [lastClickOperator, setLastClickOperator] = useState(false);
   const [lastClickEqual, setLastClickEqual] = useState(false);
 
-  const regex = /(\d+(\.\d+)?|\+|\-|\*|\/)/g;
-
   const getFinalExpressionToCalc = () => {
+    const regex = /(\d+(\.\d+)?|\+|\-|\*|\/)/g;
     const items = expressionToCalc.match(regex);
     const variables = [];
 
