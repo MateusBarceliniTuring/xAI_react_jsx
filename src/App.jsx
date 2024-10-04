@@ -1,146 +1,123 @@
 import React, { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-function App() {
-  const [tasks, setTasks] = useState([]);
-  const [doneTasks, setDoneTasks] = useState([]);
-  const [isOpen, setIsOpen] = useState(false);
-  const [editTask, setEditTask] = useState(null);
-  const [taskInput, setTaskInput] = useState('');
+const Header = () => <h1 className="text-2xl font-bold mb-4">Task Manager</h1>;
 
-  const openDialog = (task = null) => {
-    setEditTask(task);
-    setTaskInput(task ? task.title : '');
-    setIsOpen(true);
-  };
-
-  const closeDialog = () => {
-    setIsOpen(false);
-    setEditTask(null);
-    setTaskInput('');
-  };
-
-  const addTask = () => {
-    if (taskInput.trim() && taskInput.length <= 20) {
-      if (editTask) {
-        setTasks(tasks.map(t => t.id === editTask.id ? { ...t, title: taskInput } : t));
-      } else {
-        setTasks([...tasks, { id: Date.now(), title: taskInput, done: false }]);
-      }
-      closeDialog();
+function TaskForm({ onSubmit, initialValue = "" }) {
+  const [task, setTask] = useState(initialValue);
+  const handleSubmit = () => {
+    if (task.trim().length > 0 && task.length <= 20) {
+      onSubmit(task);
+      setTask("");
     }
   };
 
-  const removeTask = (id) => {
-    setTasks(tasks.filter(t => t.id !== id));
-  };
-
-  const markAsDone = (task) => {
-    setDoneTasks([...doneTasks, { ...task, doneDate: new Date().toLocaleString() }]);
-    removeTask(task.id);
-  };
-
   return (
-    <div>
-      <h1 className="text-2xl font-bold p-4 text-white bg-amber-600 w-full">Task Manager</h1>
-      <div className="container mx-auto p-4">
-        <Tabs defaultValue="todo" className="w-full">
-          <TabsList>
-            <TabsTrigger value="todo">To-Do</TabsTrigger>
-            <TabsTrigger value="done">Done</TabsTrigger>
-          </TabsList>
-          <TabsContent value="todo">
-            <Card>
-              <CardHeader>
-                <CardTitle>TO-DO List</CardTitle>
-                <CardDescription>Add, edit, remove or mark as done.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button onClick={() => openDialog()} className="mb-4 bg-amber-500">Add Task</Button>
-                {tasks.map(task => (
-                  <TaskAccordion
-                    key={task.id}
-                    task={task}
-                    onEdit={openDialog}
-                    onRemove={removeTask}
-                    onDone={markAsDone}
-                  />
-                ))}
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="done">
-            <Card>
-              <CardHeader>
-                <CardTitle>TO-DO List</CardTitle>
-                <CardDescription>Check done tasks.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {doneTasks.map(task => (
-                  <TaskAccordion
-                    key={task.id}
-                    task={task}
-                    showDate={true}
-                  />
-                ))}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-        <TaskDialog
-          isOpen={isOpen}
-          onClose={closeDialog}
-          onSave={addTask}
-          value={taskInput}
-          onChange={(e) => setTaskInput(e.target.value)}
-          isEdit={!!editTask}
-        />
-      </div>
-    </div>
-  );
-}
-
-function TaskAccordion({ task, onEdit, onRemove, onDone, showDate = false }) {
-  return (
-    <Accordion type="single" collapsible className="mb-2">
-      <AccordionItem value={`item-${task.id}`}>
-        <AccordionTrigger>{task.title}</AccordionTrigger>
-        <AccordionContent>
-          {showDate && <p>Completed on: {task.doneDate}</p>}
-          {!showDate && <Button className="bg-amber-500" onClick={() => onEdit(task)} variant="outline">Edit</Button>}
-          {!showDate && <Button onClick={() => onRemove(task.id)} variant="destructive" className="ml-2">Remove</Button>}
-          {!showDate && <Button onClick={() => onDone(task)} className="ml-2">Done</Button>}
-        </AccordionContent>
-      </AccordionItem>
-    </Accordion>
-  );
-}
-
-function TaskDialog({ isOpen, onClose, onSave, value, onChange, isEdit }) {
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{isEdit ? 'Edit Task' : 'Add Task'}</DialogTitle>
+          <DialogTitle>{initialValue ? "Edit Task" : "Add Task"}</DialogTitle>
         </DialogHeader>
-        <Input
-          value={value}
-          onChange={onChange}
-          placeholder="Enter task (max 20 characters)"
+        <Input 
+          value={task} 
+          onChange={(e) => setTask(e.target.value.slice(0, 20))} 
+          placeholder="Enter task here" 
           maxLength={20}
-          required
         />
         <DialogFooter>
-          <Button type="submit" onClick={onSave}>Save</Button>
+          <Button type="submit" onClick={handleSubmit}>Save</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
 
-export default App;
+function TaskItem({ task, onEdit, onRemove, onDone }) {
+  return (
+    <Accordion type="single" collapsible>
+      <AccordionItem value={`item-${task.id}`}>
+        <AccordionTrigger>{task.text}</AccordionTrigger>
+        <AccordionContent>
+          <Button onClick={() => onEdit(task)}>Edit</Button>
+          <Button onClick={() => onRemove(task)} className="ml-2">Remove</Button>
+          <Button onClick={() => onDone(task)} className="ml-2">Done</Button>
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
+  );
+}
+
+function CompletedTaskItem({ task }) {
+  return (
+    <Accordion type="single" collapsible>
+      <AccordionItem value={`completed-${task.id}`}>
+        <AccordionTrigger>{task.text}</AccordionTrigger>
+        <AccordionContent>
+          Completed on: {new Date(task.completedOn).toLocaleDateString()}
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
+  );
+}
+
+export default function App() {
+  const [tasks, setTasks] = useState([]);
+  const [completedTasks, setCompletedTasks] = useState([]);
+  const [open, setOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('active');
+
+  const addTask = (text) => {
+    setTasks([...tasks, { id: Date.now(), text, completed: false }]);
+    setOpen(false);
+  };
+
+  const editTask = (task, newText) => {
+    setTasks(tasks.map(t => t.id === task.id ? { ...t, text: newText } : t));
+    setOpen(false);
+  };
+
+  const removeTask = (task) => setTasks(tasks.filter(t => t.id !== task.id));
+  const markDone = (task) => {
+    setCompletedTasks([...completedTasks, { ...task, completedOn: Date.now() }]);
+    removeTask(task);
+  };
+
+  return (
+    <div className="container mx-auto p-4 sm:p-6">
+      <Header />
+      <Tabs defaultValue="active" className="mb-4">
+        <TabsList>
+          <TabsTrigger value="active">Active Tasks</TabsTrigger>
+          <TabsTrigger value="completed">Completed Tasks</TabsTrigger>
+        </TabsList>
+        <TabsContent value="active">
+          <Button onClick={() => setOpen(true)}>Add Task</Button>
+          {tasks.map(task => (
+            <TaskItem 
+              key={task.id} 
+              task={task} 
+              onEdit={(t) => { setOpen(true); setEditTask(t); }}
+              onRemove={removeTask}
+              onDone={markDone}
+            />
+          ))}
+        </TabsContent>
+        <TabsContent value="completed">
+          {completedTasks.map(task => (
+            <CompletedTaskItem key={task.id} task={task} />
+          ))}
+        </TabsContent>
+      </Tabs>
+      <TaskForm 
+        onSubmit={activeTask => activeTask ? editTask(activeTask, activeTask.text) : addTask(activeTask)}
+        initialValue={activeTask ? activeTask.text : ""}
+        open={open}
+        onOpenChange={setOpen}
+      />
+    </div>
+  );
+}
