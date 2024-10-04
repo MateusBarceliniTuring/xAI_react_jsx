@@ -33,18 +33,26 @@ function App() {
 
   const getFinalExpressionToCalc = () => {
     const items = expressionToCalc.match(regex);
-    let newExpression = '';
+    const variables = [];
 
     items.forEach(item => {
         if (/\d+/.test(item)) {
-          const newValue = parseFloat(item);
-          newExpression += newValue;
-        } else {
-          newExpression += item;
+          variables.push(parseFloat(item));
         }
     });
 
-    return newExpression;
+    return expressionToCalc.replace(/\b[a-zA-Z]+\b/g, match => {
+        return variables[match] || match;
+    });
+  }
+
+  const replacePercentage = (express) => {
+    const replace = (match) => {
+      const valor = parseFloat(match.slice(0, -1));
+      return `(${valor}/100)`;
+    }
+    const regex = /(\d+(\.\d+)?%)/g;
+    return express.replace(regex, replace);
   }
 
   const handleButtonClick = useCallback((value) => {
@@ -74,7 +82,7 @@ function App() {
           setExpression(expressionToCalc);
         } else if (value === '%') {
           if (lastClickOperator) return;
-          setExpressionToCalc(prev => prev + '/100');
+          setExpressionToCalc(prev => replacePercentage(prev + value));
           setExpression(prev => prev + value);
         }
 
