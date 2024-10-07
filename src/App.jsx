@@ -1,112 +1,114 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
-function GameHeader() {
-  return (
-    <div className="bg-blue-600 text-white p-4 text-center">
-      <h1 className="text-2xl font-bold">Guess The Number</h1>
-    </div>
-  );
-}
-
-function MiniCard() {
-  return (
-    <div className="bg-amber-300 p-4 rounded-md text-center w-16 h-16 flex items-center justify-center">
-      <span className="text-3xl">?</span>
-    </div>
-  );
-}
-
-function GameCard({ level, lives, range }) {
-  return (
-    <Card className="my-4">
-      <CardHeader>
-        <CardTitle>Level {level}</CardTitle>
-        <CardDescription>
-          Guess a number between 1 and {range}. You have {lives} lives left.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="flex justify-center">
-        <MiniCard />
-      </CardContent>
-    </Card>
-  );
-}
-
-function GuessInput({ onSubmit }) {
-  const [guess, setGuess] = useState('');
-  
-  const handleSubmit = () => {
-    onSubmit(Number(guess));
-    setGuess('');
-  };
-
-  return (
-    <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-      <Input type="number" value={guess} onChange={(e) => setGuess(e.target.value)} placeholder="Enter your guess" />
-      <Button onClick={handleSubmit}>Check</Button>
-    </div>
-  );
-}
-
-function ResultMessage({ message, onNext, onRestart }) {
-  return (
-    <div className="my-4 text-center">
-      <p>{message}</p>
-      {message.includes('Congratulations') && <Button onClick={onNext}>Next Level</Button>}
-      {message.includes('Game Over') && <Button onClick={onRestart}>Play Again</Button>}
-    </div>
-  );
-}
-
-export default function App() {
+function App() {
   const [level, setLevel] = useState(1);
   const [lives, setLives] = useState(5);
-  const [numberToGuess, setNumberToGuess] = useState(Math.floor(Math.random() * 10) + 1);
-  const [gameStatus, setGameStatus] = useState('playing');
-  const [userGuess, setUserGuess] = useState(null);
+  const [numberToGuess, setNumberToGuess] = useState(generateNumber(1, 10));
+  const [userGuess, setUserGuess] = useState('');
+  const [gameState, setGameState] = useState('playing'); // 'playing', 'won', 'lost'
 
-  const range = 10 + ((level - 1) * 10);
-  const maxLives = 5 - Math.floor((level - 1) / 3);
+  function generateNumber(min, max) {
+    const number = Math.floor(Math.random() * (max - min + 1)) + min;
+    console.log('number', number);
+    return number;
+  }
 
-  const checkGuess = (guess) => {
-    setUserGuess(guess);
-    if (guess === numberToGuess) {
-      setGameStatus('won');
-    } else if (lives - 1 === 0) {
-      setGameStatus('lost');
+  useEffect(() => {
+    if (gameState === 'playing') {
+      setNumberToGuess(generateNumber(1, level * 10));
+    }
+  }, [level, gameState]);
+
+  const checkGuess = () => {
+    if (parseInt(userGuess) === numberToGuess) {
+      if (level % 3 === 0) setLives(lives - 1);
+      setGameState('won');
     } else {
       setLives(lives - 1);
+      if (lives <= 1) setGameState('lost');
     }
   };
 
   const nextLevel = () => {
     setLevel(level + 1);
-    setNumberToGuess(Math.floor(Math.random() * (range + 10)) + 1);
-    setLives(maxLives);
-    setGameStatus('playing');
+    setGameState('playing');
   };
 
   const restartGame = () => {
     setLevel(1);
-    setLives(5);
-    setNumberToGuess(Math.floor(Math.random() * 10) + 1);
-    setGameStatus('playing');
+    setLives(5 - Math.floor((level - 1) / 3));
+    setGameState('playing');
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <GameHeader />
-      <GameCard level={level} lives={lives} range={range} />
-      {gameStatus === 'playing' && <GuessInput onSubmit={checkGuess} />}
-      {gameStatus !== 'playing' && 
-        <ResultMessage 
-          message={gameStatus === 'won' ? `Congratulations! You guessed it right!` : `Game Over! The number was ${numberToGuess}.`} 
-          onNext={nextLevel} 
-          onRestart={restartGame} 
-        />}
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center">
+      <Header />
+      <GameCard 
+        level={level} 
+        lives={lives} 
+        gameState={gameState} 
+        userGuess={userGuess}
+        setUserGuess={setUserGuess}
+        checkGuess={checkGuess}
+        nextLevel={nextLevel}
+        restartGame={restartGame}
+      />
     </div>
   );
 }
+
+function Header() {
+  return (
+    <div className="bg-blue-600 w-full p-4 text-center">
+      <h1 className="text-2xl text-white">Guess the Number</h1>
+    </div>
+  );
+}
+
+function GameCard({ level, lives, gameState, userGuess, setUserGuess, checkGuess, nextLevel, restartGame }) {
+  return (
+    <Card className="w-full max-w-sm mt-4">
+      <CardHeader>
+        <CardTitle>Level {level}</CardTitle>
+        <CardDescription>
+          Guess a number between 1 and {level * 10}. Lives: {lives}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="flex justify-center mb-4">
+          <MiniCard />
+        </div>
+        {gameState === 'playing' && (
+          <>
+            <Input type="number" value={userGuess} onChange={(e) => setUserGuess(e.target.value)} placeholder="Enter your guess" />
+            <Button className="mt-4" onClick={checkGuess}>Guess</Button>
+          </>
+        )}
+        {gameState === 'won' && <Message isWin={true} nextLevel={nextLevel} />}
+        {gameState === 'lost' && <Message isWin={false} restartGame={restartGame} />}
+      </CardContent>
+    </Card>
+  );
+}
+
+function MiniCard() {
+  return (
+    <div className="bg-amber-400 text-white p-4 rounded text-2xl">?</div>
+  );
+}
+
+function Message({ isWin, nextLevel, restartGame }) {
+  return (
+    <div className="text-center">
+      <p>{isWin ? "Correct! You guessed it!" : "Game Over! The number was " + numberToGuess}</p>
+      <Button onClick={isWin ? nextLevel : restartGame}>
+        {isWin ? "Next Level" : "Play Again"}
+      </Button>
+    </div>
+  );
+}
+
+export default App;
