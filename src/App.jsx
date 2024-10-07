@@ -11,9 +11,7 @@ function App() {
   const [gameState, setGameState] = useState('playing'); // 'playing', 'won', 'lost'
 
   function generateNumber(min, max) {
-    const number = Math.floor(Math.random() * (max - min + 1)) + min;
-    console.log('number', number);
-    return number;
+    return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
   useEffect(() => {
